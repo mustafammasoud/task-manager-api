@@ -1,9 +1,8 @@
 # Task Manager API — ASP.NET Core (C#), layered architecture
 
-A CRUD API for managing daily tasks, built with ASP.NET Core 10 **Controllers**
- and a clean layered structure: each class has exactly one
-job.
-
+A CRUD API for managing daily tasks, built with ASP.NET Core 10
+ **Controllers** and a clean layered structure: each class has exactly one job.
+ 
 ## Architecture
 
 ```
