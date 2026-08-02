@@ -1,0 +1,30 @@
+# Build folders
+bin/
+obj/
+
+# Visual Studio
+.vs/
+
+# Rider
+.idea/
+
+# User files
+*.user
+*.suo
+
+# VS Code
+.vscode/*
+
+# Keep useful shared settings if needed
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# EF Core
+Migrations/*.Designer.cs
