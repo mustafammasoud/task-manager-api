@@ -28,6 +28,7 @@ Exceptions/                  → TaskNotFoundException, InvalidTaskDataException
                            domain-level errors, HTTP-agnostic.
 Middleware/                   → ExceptionHandlingMiddleware — the single place
                            that maps exceptions to HTTP status codes/JSON.
+                           
 Program.cs                     → Composition root only: DI registration and
                            the middleware pipeline. No logic.
 ```
@@ -40,7 +41,7 @@ caught once, centrally, by `ExceptionHandlingMiddleware` and turned into the
 right status code.
 
 ## Requirements
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ## Setup & Run
 
