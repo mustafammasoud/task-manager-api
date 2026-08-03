@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using TaskManagerApi.Data;
 using TaskManagerApi.Middleware;
 using TaskManagerApi.Repositories;
 using TaskManagerApi.Services;
@@ -30,12 +32,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Repository: singleton so the in-memory store persists across requests
-// for the app's lifetime.
-builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+// DbContext: Scoped by default (one instance per HTTP request), backed by
+// the "DefaultConnection" connection string in appsettings.json.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Service: scoped is fine since it's stateless and only depends on the
-// singleton repository.
+// Repository: Scoped (not Singleton like before) since it now wraps the
+// Scoped DbContext — one repository instance per request.
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
+// Service: scoped, matching the (now scoped) repository it depends on.
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 var app = builder.Build();
