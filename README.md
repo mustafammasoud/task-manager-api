@@ -1,7 +1,8 @@
 # Task Manager API — ASP.NET Core (C#), layered architecture
 
 A CRUD API for managing daily tasks, built with ASP.NET Core 10
- **Controllers** and a clean layered structure: each class has exactly one job.
+ **Controllers**, PostgreSQL (via EF Core) for persistence, and a clean
+ layered structure: each class has exactly one job.
  
 ## Architecture
 
@@ -14,9 +15,12 @@ Services/              → Business rules (existence checks, "title can't be
                          its interface. Throws domain exceptions instead of
                          deciding HTTP status codes.
 Repositories/           → Persistence only. No validation, no business rules.
-                         Swap InMemoryTaskRepository for an EF Core
-                         implementation without touching Services/Controllers.
+                         Backed by PostgreSQL via EF Core (EfTaskRepository +
+                         AppDbContext). InMemoryTaskRepository is kept around,
+                         unused, as a drop-in swap for tests/local runs.
 Models/Entities/         → Internal domain model (TaskItem, TaskState).
+Data/                     → AppDbContext — EF Core mapping of TaskItem onto
+                           the `tasks` table (Postgres).
 Models/Requests/          → One DTO per write operation:
                            CreateTaskRequest, ReplaceTaskRequest (PUT),
                            PatchTaskRequest (PATCH) — each only exposes/
@@ -28,7 +32,6 @@ Exceptions/                  → TaskNotFoundException, InvalidTaskDataException
                            domain-level errors, HTTP-agnostic.
 Middleware/                   → ExceptionHandlingMiddleware — the single place
                            that maps exceptions to HTTP status codes/JSON.
-                           
 Program.cs                     → Composition root only: DI registration and
                            the middleware pipeline. No logic.
 ```
@@ -41,17 +44,48 @@ caught once, centrally, by `ExceptionHandlingMiddleware` and turned into the
 right status code.
 
 ## Requirements
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [PostgreSQL](https://www.postgresql.org/download/) running locally (or reachable)
+- EF Core CLI tool: `dotnet tool install --global dotnet-ef` (skip if already installed)
 
 ## Setup & Run
 
 ```bash
 cd task-manager-api
 dotnet restore
+```
+
+**1. Create the database** (name matches `appsettings.json` — `task_manager` by default):
+```bash
+createdb task_manager
+```
+
+**2. Set the database password via User Secrets** (kept out of `appsettings.json`
+so it never ends up in git — `appsettings.json` only has the connection
+string minus the password):
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=task_manager;Username=postgres;Password=YOUR_PASSWORD"
+```
+
+**3. Apply migrations** (creates the `tasks` table):
+```bash
+dotnet ef database update
+```
+
+**4. Run:**
+```bash
 dotnet run
 ```
 
 API: `http://localhost:5048` · Swagger UI: `http://localhost:5048/swagger`
+
+### Adding a new migration
+After changing `TaskItem` or `AppDbContext`'s model configuration:
+```bash
+dotnet ef migrations add <DescriptiveName>
+dotnet ef database update
+```
 
 ## Data Model
 
